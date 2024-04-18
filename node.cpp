@@ -11,6 +11,8 @@ Node::Node()
   data = 0;
   left = NULL;
   right = NULL;
+  parent = NULL;
+  color = 'r'; // all nodes will be added as red nodes
 }
 
 // regular constructor
@@ -19,6 +21,8 @@ Node::Node(int newdata)
   data = newdata;
   left = NULL;
   right = NULL;
+  parent = NULL;
+  color = 'r';
 }
 
 // destructor, which destroys anything left on the heap
@@ -26,6 +30,7 @@ Node::~Node()
 {
   left = NULL;
   right = NULL;
+  parent = NULL;
 }
 
 		
@@ -47,6 +52,18 @@ int Node::getValue()
   return data;
 }
 
+// returns parent
+Node* Node::getParent()
+{
+  return parent;
+}
+
+// returns color
+char Node::getColor()
+{
+  return color;
+}
+
 // set left child
 void Node::setLeft(Node* newleft)
 {
@@ -63,4 +80,14 @@ void Node::setRight(Node* newright)
 void Node::setValue(int newdata)
 {
   data = newdata;
+}
+
+void Node::setParent(Node* newparent)
+{
+  parent = newparent;
+}
+
+void Node::setColor(char newcolor)
+{
+  color = newcolor;
 }

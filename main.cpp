@@ -8,16 +8,27 @@ using namespace std;
 /*
  * Author | Sophia You
  * Date | March 27 2024
- * Description | This is a binary search tree. Data values are entered from either the
- * console or via a file. The first data value is the root of the tree. As each data
- * value is entered, if it is less than the root, it becomes a left descendant, and if 
- * it is greater than the root, it becomes a right descendant. A user should be able to
- * add, search for, and remove parts of the tree.
+ * Description | This is a red-black binary search tree. It is a way of
+ * creating a more balanced binary search tree. Red-black tree conditions
+ * and cases are explained in more detail below.
+ * Sources | 
+ */
+
+
+// RED BLACK TREE CONDITIONS
+/*
+ * Node is either red or black
+ * root is black
+ * all "leaves" (null children) are black
+ * every red node has 2 black children
+ * every path from root to leaf has the same number of black nodes
  */
 
 // FUNCTION PROTOTYPES
+// insertion + cases
 void insert(Node* &root, Node* current,  Node* newnode);
 void print(Node* current, int numTabs);
+void insCaseI(Node* &root);
 bool traverse(Node* current, int searchkey);
 void remove(Node* &root, Node* current, Node* parent, int searchkey);
 
@@ -37,7 +48,7 @@ int main()
       // instructions
       cout << endl;
       cout << "Please only use lowercase letters." << endl;
-      cout << "This is a binary search tree." << endl;
+      cout << "This is a red-black binary search tree." << endl;
       cout << endl;
       cout << "To quit the program, type 'quit.'" << endl;
       cout << "To insert nodes, type 'insert.'" << endl;
@@ -56,29 +67,21 @@ int main()
       // insert nodes into the tree via console or file
       else if (strcmp(input, "insert") == 0)
 	{
-	  cout << "to insert via console, type 'console.'" << endl;
-	  cout << "to insert via file, type 'file.'" << endl;
+	  cout << "to insert a single number, type 'add.'" << endl;
+	  cout << "to read in a file, type 'read.'" << endl;
 	  cin.getline(input, max);
-	  if (strcmp(input, "console") == 0)
+	  if (strcmp(input, "add") == 0)
 	    {
-	      int numValues = 0;
+	      cout << "Enter the number you want to add." << endl;
 	      int newnum = 0;
-	      cout << "How many data values are you entering?" << endl;
-	      cin >> numValues;
-	      cin.ignore(max, '\n');
-	      cout << "Enter your values separated by a space." << endl;
-	      for (int i = 0; i < numValues; i++)
-		{
-		  cin >> newnum;
-		  Node* newnode = new Node(newnum);
-		  insert(root, root, newnode);
-		  print(root, 0);
-		}
-	      
+	      cin >> newnum;
+	      Node* newnode = new Node(newnum);
+	      insert(root, root, newnode);
+	      print(root, 0);
 	      cin.ignore(max, '\n');
 	      
 	    }
-	  else if (strcmp(input, "file") == 0)
+	  else if (strcmp(input, "read") == 0)
 	    {
 	      // read in the file
 	      cout << "What is the name of the file you want to read in?" << endl;
@@ -167,6 +170,9 @@ void insert(Node* &root, Node* current, Node* newnode)
   if (root == NULL) // empty tree
     {
       root = newnode;
+
+      // jump to CASE I: new node is the root
+      insCaseI(root);
       return;
     }
 
@@ -176,6 +182,7 @@ void insert(Node* &root, Node* current, Node* newnode)
       if (current->getLeft() == NULL) // reached a leaf
 	{
 	  current->setLeft(newnode);
+	  current->getLeft()->setParent(current); // establish the parent
 	}
       else // keep moving down the tree
 	{
@@ -189,6 +196,7 @@ void insert(Node* &root, Node* current, Node* newnode)
       if (current->getRight() == NULL) // reached a leaf
 	{
 	  current->setRight(newnode);
+	  current->getRight()->setParent(current); // establish the parent
 	}
       else // keep moving down the tree
 	{
@@ -202,6 +210,13 @@ void insert(Node* &root, Node* current, Node* newnode)
       cout << "Two nodes of the same value cannot be added." << endl;
       cout << "Therefore the node " << newnode->getValue() << " cannot be addedmore than once." << endl;
     }
+}
+
+// INSERTION CASES I-V
+void insCaseI(Node* &root)
+{
+  root->setColor('b');
+  return;
 }
 
 /**
@@ -427,7 +442,13 @@ void print(Node* current, int numTabs)
       // indent the number of times as stated by numTabs
       cout << "\t";
     }
-  cout << current->getValue() << "\n"; // print the current value
+  cout << current->getValue();
+  cout << " (" << current->getColor() << ") ";
+  if (current->getParent()) // if parent exists
+    {
+      cout << "p = " << current->getParent()->getValue();
+    }
+  cout << "\n"; // print the current value
   print(current->getLeft(), numTabs); // recursively print left child
 }
 
