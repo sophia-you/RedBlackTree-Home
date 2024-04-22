@@ -28,6 +28,7 @@ using namespace std;
 // insertion + cases
 void insert(Node* &root, Node* current,  Node* newnode);
 void print(Node* current, int numTabs);
+int childStatus(Node* node);
 void insCaseI(Node* &root);
 bool traverse(Node* current, int searchkey);
 void remove(Node* &root, Node* current, Node* parent, int searchkey);
@@ -211,6 +212,39 @@ void insert(Node* &root, Node* current, Node* newnode)
       cout << "Therefore the node " << newnode->getValue() << " cannot be addedmore than once." << endl;
     }
 }
+
+/**
+ * This function indicates whether the current node is a right or left child
+ */
+int childStatus(Node* node)
+{
+  if (node) // if the node is not null
+    {
+      if (node->getParent()->getLeft() != NULL &&
+	  node->getParent()->getLeft() == node)
+	{
+	  // the current node is a left child
+	  return 1; // 1 = left
+	}
+      else if (node->getParent()->getRight() != NULL &&
+	       node->getParent()->getRight() == node)
+	{
+	  // the current node is a right child
+	  return 2; // 2 = right child
+	}
+    }
+  return 0; // if we have some other situation going on
+}
+
+/**
+ * This function performs a right rotation around a given node "current"
+ */
+void rightRotation(Node* current)
+{
+  
+}
+
+//void leftRotation();
 
 // INSERTION CASES I-V
 void insCaseI(Node* &root)
@@ -447,7 +481,9 @@ void print(Node* current, int numTabs)
   if (current->getParent()) // if parent exists
     {
       cout << "p = " << current->getParent()->getValue();
+      //cout << " childstatus: " << childStatus(current);
     }
+
   cout << "\n"; // print the current value
   print(current->getLeft(), numTabs); // recursively print left child
 }
