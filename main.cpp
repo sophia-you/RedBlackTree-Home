@@ -27,10 +27,12 @@ using namespace std;
 // FUNCTION PROTOTYPES
 // insertion + cases
 void insert(Node* &root, Node* current,  Node* newnode);
+void rightRotation(Node* current, Node* &root);
+void leftRotation(Node* current, Node* &root);
 void print(Node* current, int numTabs);
 int childStatus(Node* node);
 void insCaseI(Node* &root);
-bool traverse(Node* current, int searchkey);
+Node* traverse(Node* current, int searchkey);
 void remove(Node* &root, Node* current, Node* parent, int searchkey);
 
 int main()
@@ -65,6 +67,10 @@ int main()
 	  running = false;
 	}
 
+      else if (strcmp(input, "test") == 0)
+	{
+	  
+	}
       // insert nodes into the tree via console or file
       else if (strcmp(input, "insert") == 0)
 	{
@@ -138,10 +144,11 @@ int main()
 	  int searchkey = 0; // this is the number we are trying to find
 	  cin >> searchkey;
 	  cin.ignore(max, '\n');
-	  bool found = traverse(root, searchkey);
+	  Node* found = traverse(root, searchkey);
 	  if (found)
 	    {
 	      cout << "This value exists in the binary tree." << endl;
+	      rightRotation(found, root);
 	    }
 	  else
 	    {
@@ -239,12 +246,56 @@ int childStatus(Node* node)
 /**
  * This function performs a right rotation around a given node "current"
  */
-void rightRotation(Node* current)
+void rightRotation(Node* current, Node* &root)
+{
+  // if the right subtree of the left child exists
+  if (current->getLeft())
+    {
+      Node* rotated = current->getLeft(); // this will take current's place
+      if (rotated->getRight())
+	{
+	  cout << "right subtree exists!" << endl;
+	  Node* rightSubtree = rotated->getRight();
+
+	  if (current->getParent()) // if the rotated node is NODE the root
+	    {
+	      // set left child's parent as the grandparent
+	      rotated->setParent(current->getParent());
+
+	      // depending on whether current itself was a left or right child
+	      // current's left child will take the place of current
+	      if (childStatus(current) == 1) // left child
+		{
+		  cout << "current is a left child" << endl;
+		  current->getParent()->setLeft(rotated);
+		}
+	      else if (childStatus(current) == 2) // right child
+		{
+		  cout << "current is a right child" << endl;
+		  current->getParent()->setRight(rotated);
+		}
+	    }
+	  else if (!current->getParent()) // the rotated node IS the root
+	    {
+	      // save current inside a temporary variable
+	      //Node* right;
+	    }
+	  //Node* newright = current;
+	  current->setParent(rotated); // current becomes the right subtree
+	  rotated->setRight(current);
+	  
+	  // the old right subtree becomes current's left subtree
+	  current->setLeft(rightSubtree);
+	  print(root, 0);
+	}
+    }
+}
+
+
+void leftRotation(Node* current, Node* &root)
 {
   
 }
-
-//void leftRotation();
 
 // INSERTION CASES I-V
 void insCaseI(Node* &root)
@@ -480,7 +531,7 @@ void print(Node* current, int numTabs)
   cout << " (" << current->getColor() << ") ";
   if (current->getParent()) // if parent exists
     {
-      cout << "p = " << current->getParent()->getValue();
+      //cout << "p = " << current->getParent()->getValue();
       //cout << " childstatus: " << childStatus(current);
     }
 
@@ -494,21 +545,21 @@ void print(Node* current, int numTabs)
  *
  * @param current | the current node we're dealing with
  * @param searchkey | the value of the node we're trying to find
- * @return bool | returns whether or not the searchkey was found.
+ * @return Node | returns the node if the searchkey was found
  */
-bool traverse(Node* current, int searchkey)
+Node* traverse(Node* current, int searchkey)
 {
   // base case; we have not found the key
   if (current == NULL)
     {
       // we have walked through the tree without finding it
-      return false;
+      return NULL;
     }
   
   // the searchkey has been found
   else if (current->getValue() == searchkey)
     {
-      return true;
+      return current;
     }
   
   // RECURSIVE CASES
@@ -523,5 +574,5 @@ bool traverse(Node* current, int searchkey)
       return traverse(current->getRight(), searchkey);
     }
 
-  return false;
+  return NULL;
 }
