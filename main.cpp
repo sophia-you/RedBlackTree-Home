@@ -149,6 +149,8 @@ int main()
 	    {
 	      cout << "This value exists in the binary tree." << endl;
 	      rightRotation(found, root);
+	      cout << "left rotation" << endl;
+	      leftRotation(found->getParent(), root);
 	    }
 	  else
 	    {
@@ -294,7 +296,47 @@ void rightRotation(Node* current, Node* &root)
 
 void leftRotation(Node* current, Node* &root)
 {
-  
+  // if the right subtree of the left child exists
+  if (current->getRight())
+    {
+      Node* rotated = current->getRight(); // this will take current's place
+      if (rotated->getLeft())
+	{
+	  cout << "left subtree exists!" << endl;
+	  Node* leftSubtree = rotated->getLeft();
+
+	  if (current->getParent()) // if the rotated node is NOT the root
+	    {
+	      // set left child's parent as the grandparent
+	      rotated->setParent(current->getParent());
+
+	      // depending on whether current itself was a left or right child
+	      // current's left child will take the place of current
+	      if (childStatus(current) == 1) // left child
+		{
+		  cout << "current is a left child" << endl;
+		  current->getParent()->setLeft(rotated);
+		}
+	      else if (childStatus(current) == 2) // right child
+		{
+		  cout << "current is a right child" << endl;
+		  current->getParent()->setRight(rotated);
+		}
+	    }
+	  else if (!current->getParent()) // the rotated node IS the root
+	    {
+	      // save current inside a temporary variable
+	      //Node* right;
+	    }
+	  //Node* newright = current;
+	  current->setParent(rotated); // current becomes the right subtree
+	  rotated->setLeft(current);
+	  
+	  // the old right subtree becomes current's left subtree
+	  current->setRight(leftSubtree);
+	  print(root, 0);
+	}
+    }
 }
 
 // INSERTION CASES I-V
