@@ -82,10 +82,10 @@ int main()
 	      cout << "Enter the number you want to add." << endl;
 	      int newnum = 0;
 	      cin >> newnum;
+	      cin.ignore(max, '\n');
 	      Node* newnode = new Node(newnum);
 	      insert(root, root, newnode);
 	      print(root, 0);
-	      cin.ignore(max, '\n');
 	      
 	    }
 	  else if (strcmp(input, "read") == 0)
@@ -107,6 +107,10 @@ int main()
 	      print(root, 0);
 	      
 	      inFile.close();
+	    }
+	  else
+	    {
+	      cout << "Command not recognized." << endl;
 	    }
 	}
 
@@ -253,58 +257,13 @@ void rightRotation(Node* current, Node* &root)
   // if the right subtree of the left child exists
   if (current->getLeft())
     {
+      Node* rightSubtree = NULL;
       Node* rotated = current->getLeft(); // this will take current's place
       if (rotated->getRight())
 	{
 	  cout << "right subtree exists!" << endl;
-	  Node* rightSubtree = rotated->getRight();
-
-	  if (current->getParent()) // if the rotated node is NODE the root
-	    {
-	      // set left child's parent as the grandparent
-	      rotated->setParent(current->getParent());
-
-	      // depending on whether current itself was a left or right child
-	      // current's left child will take the place of current
-	      if (childStatus(current) == 1) // left child
-		{
-		  cout << "current is a left child" << endl;
-		  current->getParent()->setLeft(rotated);
-		}
-	      else if (childStatus(current) == 2) // right child
-		{
-		  cout << "current is a right child" << endl;
-		  current->getParent()->setRight(rotated);
-		}
-	    }
-	  else if (!current->getParent()) // the rotated node IS the root
-	    {
-	      // save current inside a temporary variable
-	      //Node* right;
-	    }
-	  //Node* newright = current;
-	  current->setParent(rotated); // current becomes the right subtree
-	  rotated->setRight(current);
-	  
-	  // the old right subtree becomes current's left subtree
-	  current->setLeft(rightSubtree);
-	  print(root, 0);
+	  rightSubtree = rotated->getRight();
 	}
-    }
-}
-
-
-void leftRotation(Node* current, Node* &root)
-{
-  // if the right subtree of the left child exists
-  if (current->getRight())
-    {
-      Node* rotated = current->getRight(); // this will take current's place
-      if (rotated->getLeft())
-	{
-	  cout << "left subtree exists!" << endl;
-	  Node* leftSubtree = rotated->getLeft();
-
 	  if (current->getParent()) // if the rotated node is NOT the root
 	    {
 	      // set left child's parent as the grandparent
@@ -325,17 +284,74 @@ void leftRotation(Node* current, Node* &root)
 	    }
 	  else if (!current->getParent()) // the rotated node IS the root
 	    {
-	      // save current inside a temporary variable
-	      //Node* right;
+	      // in this case, there is no parent
+	      // we have to redefine the root as the rotated node
+	      cout << "hello" << endl;
+	      root = rotated;
+	      root->setParent(NULL);
+	      cout << current->getValue() << endl;
 	    }
-	  //Node* newright = current;
+
+	  current->setParent(rotated); // current becomes the right subtree
+	  rotated->setRight(current);
+	  
+	  // the old right subtree becomes current's left subtree
+	  current->setLeft(rightSubtree);
+
+	  print(root, 0);
+	
+    }
+}
+
+
+void leftRotation(Node* current, Node* &root)
+{
+  // if the right subtree of the left child exists
+  if (current->getRight())
+    {
+      Node* rotated = current->getRight(); // this will take current's place
+      Node* leftSubtree = NULL;
+      if (rotated->getLeft())
+	{
+	  cout << "left subtree exists!" << endl;
+	  leftSubtree = rotated->getLeft();
+	  cout << "current: " << current->getValue() << endl;
+	  cout << "root: " << root->getValue() << endl;
+	}
+	  if (current->getParent() != NULL) // if the rotated node is NOT the root
+	    {
+	      cout << "parent is not equal to null" << endl;
+	      // set left child's parent as the grandparent
+	      rotated->setParent(current->getParent());
+
+	      // depending on whether current itself was a left or right child
+	      // current's left child will take the place of current
+	      if (childStatus(current) == 1) // left child
+		{
+		  cout << "current is a left child" << endl;
+		  current->getParent()->setLeft(rotated);
+		}
+	      else if (childStatus(current) == 2) // right child
+		{
+		  cout << "current is a right child" << endl;
+		  current->getParent()->setRight(rotated);
+		}
+	    }
+	  else if (current == root) // rotated node IS the root
+	    {
+	      cout << "current is the root" << endl;
+	      root = rotated;
+	      root->setParent(NULL);
+	      cout << rotated->getValue() << endl;
+	    }
+
 	  current->setParent(rotated); // current becomes the right subtree
 	  rotated->setLeft(current);
 	  
 	  // the old right subtree becomes current's left subtree
 	  current->setRight(leftSubtree);
 	  print(root, 0);
-	}
+	
     }
 }
 
