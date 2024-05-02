@@ -197,6 +197,10 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setLeft(newnode);
 	  current->getLeft()->setParent(current); // establish the parent
+	  if (newnode->getParent() && newnode->getParent()->getColor() == 'r')
+	    {
+	      newnode->setColor('b');
+	    }
 	}
       else // keep moving down the tree
 	{
@@ -211,6 +215,10 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setRight(newnode);
 	  current->getRight()->setParent(current); // establish the parent
+	  if (newnode->getParent() && newnode->getParent()->getColor() == 'r')
+            {
+              newnode->setColor('b');
+            }
 	}
       else // keep moving down the tree
 	{
@@ -224,6 +232,14 @@ void insert(Node* &root, Node* current, Node* newnode)
       cout << "Two nodes of the same value cannot be added." << endl;
       cout << "Therefore the node " << newnode->getValue() << " cannot be addedmore than once." << endl;
     }
+}
+
+void insCaseChecker(Node* &root, Node* current)
+{
+  // CASE 2: parent is the root and it is red
+  // CASE 3: parent and uncle nodes are red (2 red generations)
+  // CASE 4: parent node is red, uncle node is black, inner grandchild
+  // CASE 5: parent node is red, uncle is black, outer grandchild
 }
 
 /**
@@ -273,12 +289,12 @@ void rightRotation(Node* current, Node* &root)
 	      // current's left child will take the place of current
 	      if (childStatus(current) == 1) // left child
 		{
-		  cout << "current is a left child" << endl;
+		  //cout << "current is a left child" << endl;
 		  current->getParent()->setLeft(rotated);
 		}
 	      else if (childStatus(current) == 2) // right child
 		{
-		  cout << "current is a right child" << endl;
+		  //cout << "current is a right child" << endl;
 		  current->getParent()->setRight(rotated);
 		}
 	    }
@@ -286,7 +302,7 @@ void rightRotation(Node* current, Node* &root)
 	    {
 	      // in this case, there is no parent
 	      // we have to redefine the root as the rotated node
-	      cout << "hello" << endl;
+	      //cout << "hello" << endl;
 	      root = rotated;
 	      root->setParent(NULL);
 	      cout << current->getValue() << endl;
