@@ -25,14 +25,20 @@ using namespace std;
  */
 
 // FUNCTION PROTOTYPES
-// insertion + cases
+// insertion
 void insert(Node* &root, Node* current,  Node* newnode);
 void rightRotation(Node* current, Node* &root);
 void leftRotation(Node* current, Node* &root);
 void print(Node* current, int numTabs);
 int childStatus(Node* node);
+Node* getUncle(Node* node);
+void fixInsert(Node* &root, Node* newnode);
 void insCaseI(Node* &root);
+
+// search
 Node* traverse(Node* current, int searchkey);
+
+// remove
 void remove(Node* &root, Node* current, Node* parent, int searchkey);
 
 int main()
@@ -172,7 +178,8 @@ int main()
  * search tree. If the new value is greater, it goes down to the right child,
  * and if it is lesser, it goes down the left. This process is repeated
  * with each node until the new value reaches a left and establishes
- * its position there.
+ * its position there. It then readjusts the tree based on the red black tree
+ * cases.
  *
  * @param root | the root of the btree in question
  * &param current | the current node in the btree we're evaluating
@@ -184,9 +191,9 @@ void insert(Node* &root, Node* current, Node* newnode)
   if (root == NULL) // empty tree
     {
       root = newnode;
-
+      //print(root, 0);
       // jump to CASE I: new node is the root
-      insCaseI(root);
+      fixInsert(root, newnode, true);
       return;
     }
 
@@ -197,10 +204,10 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setLeft(newnode);
 	  current->getLeft()->setParent(current); // establish the parent
-	  if (newnode->getParent() && newnode->getParent()->getColor() == 'r')
-	    {
-	      newnode->setColor('b');
-	    }
+
+	  //print(root, 0);
+	  // after inserting, we have to check the violations
+	  fixInsert(root, newnode, true);
 	}
       else // keep moving down the tree
 	{
@@ -215,10 +222,8 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setRight(newnode);
 	  current->getRight()->setParent(current); // establish the parent
-	  if (newnode->getParent() && newnode->getParent()->getColor() == 'r')
-            {
-              newnode->setColor('b');
-            }
+	  //print(root, 0);
+	  fixInsert(root, newnode, true);
 	}
       else // keep moving down the tree
 	{
@@ -234,12 +239,53 @@ void insert(Node* &root, Node* current, Node* newnode)
     }
 }
 
-void insCaseChecker(Node* &root, Node* current)
+void fixInsert(Node* &root, Node* newnode, bool violation)
 {
-  // CASE 2: parent is the root and it is red
-  // CASE 3: parent and uncle nodes are red (2 red generations)
-  // CASE 4: parent node is red, uncle node is black, inner grandchild
-  // CASE 5: parent node is red, uncle is black, outer grandchild
+  char uncleColor = '\0';
+  char parentColor = '\0';
+
+  // all violations have been fixed!
+  if (!violation)
+    {
+      return;
+    }
+  else
+    {
+      // if the root is NOT black
+      // if the node is red has has red parents
+      if (getUncle(newnode))
+	{
+	  uncleColor = getUncle(newnode)->getColor();
+	}
+      if (newnode->getParent())
+	{
+	  parentColor = newnode->getParent()->getColor();
+	}
+
+      // CASE 1: newnode is the root
+      if (newnode == root)
+	{
+	  insCaseI(newnode);
+	}
+
+      // CASE 2: parent is the root and it is red                                 
+      if (newnode->getParent() == root && parentColor == 'r')
+	{
+	}
+
+      // CASE 3: parent and uncle nodes are red (2 red generations)
+      if (uncleColor == 'r' && parentColor == 'r')
+	{
+	}
+
+      // CASE 4: parent node is red, uncle node is black, inner grandchild
+      if (parentColor == 'r' && uncleColor == 'b')
+	{
+	}
+
+      // CASE 5: parent node is red, uncle is black, outer grandchild
+
+    }
 }
 
 /**
@@ -263,6 +309,28 @@ int childStatus(Node* node)
 	}
     }
   return 0; // if we have some other situation going on
+}
+
+/**
+ * This function will return the node that is the current node's uncle, or 
+ * the sibling to the parent node
+ */
+
+Node* getUncle(Node* node)
+{
+  if (childStatus(node->getParent()) == 1) // parent is the left child
+    {
+      // returns the RIGHT child of the grandparent
+      return node->getParent()->getParent()->getRight();
+    }
+  else if (childStatus(node->getParent()) == 2) // parent is the right child
+  {
+    return node->getParent()->getParent()->getLeft(); // parent is left child
+  }
+  else
+    {
+      return NULL;
+    }
 }
 
 /**
