@@ -193,7 +193,7 @@ void insert(Node* &root, Node* current, Node* newnode)
       root = newnode;
       //print(root, 0);
       // jump to CASE I: new node is the root
-      fixInsert(root, newnode, true);
+      fixInsert(root, newnode);
       return;
     }
 
@@ -204,10 +204,9 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setLeft(newnode);
 	  current->getLeft()->setParent(current); // establish the parent
-
-	  //print(root, 0);
+	  
 	  // after inserting, we have to check the violations
-	  fixInsert(root, newnode, true);
+	  fixInsert(root, newnode);
 	}
       else // keep moving down the tree
 	{
@@ -222,8 +221,7 @@ void insert(Node* &root, Node* current, Node* newnode)
 	{
 	  current->setRight(newnode);
 	  current->getRight()->setParent(current); // establish the parent
-	  //print(root, 0);
-	  fixInsert(root, newnode, true);
+	  fixInsert(root, newnode);
 	}
       else // keep moving down the tree
 	{
@@ -239,9 +237,120 @@ void insert(Node* &root, Node* current, Node* newnode)
     }
 }
 
-void fixInsert(Node* &root, Node* newnode, bool violation)
+void fixInsert(Node* &root, Node* newnode)
 {
-  char uncleColor = '\0';
+  cout << "inside fix insert" << endl;
+  print(root, 0);
+  // CASE 1: new node is the root. Just set it to black
+  if (newnode == root) // case 1
+    {
+      cout << "case one" << endl;
+      root->setColor('b');
+      return;
+    }
+
+  // CASE 2: newnode's parent is black
+  else if (newnode->getParent()->getColor() == 'b') // case 2
+    {
+      cout << "case two" << endl;
+      
+    }
+
+  // CASE 3: Parent and the uncle are RED
+  else if (newnode->getParent()->getColor() == 'r' &&
+	   getUncle(newnode) && getUncle(newnode)->getColor() == 'r') // case 3
+    {
+      cout << "case 3" << endl;
+      Node* grandparent = NULL;
+      if (newnode->getParent()->getParent())
+	{
+	  grandparent = newnode->getParent()->getParent();
+	}
+      Node* uncle = getUncle(newnode);
+
+      // set the parent node to black to fix the red-black property violation
+      newnode->getParent()->setColor('b');
+      if (uncle) // if uncle exists
+	{
+	  uncle->setColor('b');
+	}
+      if (grandparent) // if grandparent exists
+	{
+	  grandparent->setColor('r');
+	}
+      
+      // we have to fix any possible violations created by this
+      fixInsert(root, grandparent);
+    }
+
+  // CASE 4: Uncle is black, and newnode is the inner grandchild (triangle)
+  // childstatus 1 is left child, childstatus 0 is right child
+  // CASE 5: Uncle is black, and newnode is the outer grandchild (line)
+  else if (newnode->getParent()->getColor() == 'r' &&
+	   ((getUncle(newnode) && getUncle(newnode)->getColor() == 'b') ||
+	    getUncle(newnode) == NULL)) // null children are black
+    {
+      cout << "case 4 or case 5" << endl;
+      Node* parent = newnode->getParent();
+      Node* grandparent = newnode->getParent()->getParent();
+      
+      // CASE 4
+      // right inner grandchild
+      if (childStatus(newnode) == 0 &&
+	  childStatus(parent) == 1)
+	{
+	  cout << "case 4, right inner grandchild" << endl;
+	  // tree rotation through the node's parent in the OPPOSITE direction
+	  leftRotation(parent, root);
+	  fixInsert(root, parent); // call case 5 on the parent node
+	}
+      // left inner grandchild
+      else if (childStatus(newnode) == 1 &&
+             childStatus(parent) == 0)
+	{
+	  cout << "case 4, left inner grandchild" << endl;
+	  // tree rotation in the opposite direction
+	  rightRotation(parent, root);
+	  fixInsert(root, parent);
+	}
+
+      // CASE 5
+      // left outer grandchild
+      else if (childStatus(newnode) == 1 &&
+	  childStatus(parent) == 1)
+	{
+	  cout << "case 5 left" << endl;
+	  // tree rotation through the grandparent
+	  if (grandparent) // if grandparent is not null
+	    {
+	      rightRotation(grandparent, root);
+
+	      // switch parent and grandparent colors
+	      char parentColor = parent->getColor();
+	      parent->setColor(grandparent->getColor());
+	      grandparent->setColor(parentColor);
+	    }
+	}
+      // right outer grandchild
+      else if (childStatus(newnode) == 0 &&
+	       childStatus(parent) == 0)
+	{
+	  cout << "case 5 right" << endl;
+	  if (grandparent)
+	    {
+	      leftRotation(grandparent, root);
+	      // switch parent and grandparent colors                          
+	      char parentColor = parent->getColor();
+              parent->setColor(grandparent->getColor());
+              grandparent->setColor(parentColor);
+	    }
+	}
+    }
+  else
+    {
+      cout << "what is happening" << endl;
+    }
+  /* char uncleColor = '\0';
   char parentColor = '\0';
 
   // all violations have been fixed!
@@ -285,7 +394,7 @@ void fixInsert(Node* &root, Node* newnode, bool violation)
 
       // CASE 5: parent node is red, uncle is black, outer grandchild
 
-    }
+      }*/
 }
 
 /**
