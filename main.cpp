@@ -744,8 +744,9 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
   Node* sibling = NULL;
   int nChildStatus = 0; // is the deleted node a right or left child?
 
-  if (node)
+  if (node && node != root)
     {
+      cout << "current node value: " << node->getValue() << endl;
       cout << "the replaced node exists" << endl;
       parent = node->getParent();
       sibling = getSibling(node);
@@ -788,14 +789,14 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
       if (sibling)
 	{
 	  sColor = sibling->getColor();
-	}
-      if (sibling->getRight())
-	{
-	  rcColor = sibling->getRight()->getColor();
-	}
-      if (sibling->getLeft())
-	{
-	  lcColor = sibling->getLeft()->getColor();
+	  if (sibling->getRight())
+	    {
+	      rcColor = sibling->getRight()->getColor();
+	    }
+	  if (sibling->getLeft())
+	    {
+	      lcColor = sibling->getLeft()->getColor();
+	    }
 	}
 
       // CASE 2: node's sibling, s, is red, everything else is black
@@ -816,6 +817,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	      rightRotation(parent, root);
 	    }
 	    swapColor(parent, sibling);
+	    
 	    // fix any new violations through a recursive call
 	    deleteByCase(node, deleted, root);
 	}
@@ -832,7 +834,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	      // remove 1 black node on the other side of the tree
 	      sibling->setColor('r'); // color sibling red
 	    }
-	  deleteByCase(parent,deleted, root); // fix violations
+	  deleteByCase(parent, deleted, root); // fix violations
 	}
 
       // CASE 4: parent = red, sibling + sibling's children are black
@@ -857,6 +859,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  // rotate through the sibling (rotate OUTWARD)
 	  swapColor(sibling, sibling->getRight());
 	  leftRotation(sibling, root);
+	  deleteByCase(node, deleted, root);
 	}
       else if (nChildStatus == 1 && // node is a left child
 	       sColor == 'b' &&
@@ -867,6 +870,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  cout << "case 5 left node" << endl;
 	  swapColor(sibling, sibling->getLeft());
 	  rightRotation(sibling, root);
+	  deleteByCase(node, deleted, root);
 	}
 
       // CASE 6: parent = either color, outer niece = red, else = black
@@ -880,6 +884,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  // rotate AWAY from the sibling's child
 	  rightRotation(parent, root);
 	  swapColor(sibling, parent);
+	  sibling->getRight()->setColor('b');
 	}
       else if (nChildStatus == 1 && // left child
 	       sColor == 'b' &&
@@ -890,6 +895,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  cout << "case 6 left node" << endl;
 	  leftRotation(parent, root);
 	  swapColor(sibling, parent);
+	  sibling->getRight()->setColor('b');
 	}
     }
 }
