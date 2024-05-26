@@ -35,12 +35,14 @@ void leftRotation(Node* current, Node* &root);
 void print(Node* current, int numTabs);
 int childStatus(Node* node);
 Node* getUncle(Node* node);
+Node* getSibling(Node* node);
 Node* search(Node* current, int searchkey);
 void swapColor(Node* a, Node* b);
 
-// remove
+// deletion
 void remove(Node* &root, Node* current, Node* parent, int searchkey);
 void fixRemove(Node* &root, Node* node, Node* deleted);
+void deleteByCase(Node* node, Node* deleted, Node* &root);
 
 int main()
 {
@@ -518,7 +520,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
   // we have found the node to remove
   if (searchkey == current->getValue())
     {
-      replaced = current;
+
       if (current->getParent())
 	{
 	  replacedParent = current->getParent();
@@ -690,159 +692,204 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 void fixRemove(Node* &root, Node* node, Node* deleted)
 {
   Node* parent = NULL;
+  char ncolor = 'b';
+  char dcolor = deleted->getColor();
   if (node)
     {
-      parent = node->getParent();
-      cout << "parent value: " << parent->getValue() << endl;
+      ncolor = node->getColor();
+    }
+  
+  if (node)
+    {
+      cout << "replaced value " << node->getValue() << endl;
     }
   if (deleted)
     {
       cout << "deleted value " << deleted->getValue() << endl;
     }
 
-  if (node && deleted)
+  // PART I: node = red, deleted = black - we have lost one black node
+  if (ncolor == 'r' && dcolor == 'b')
     {
-      // PART I: node = red, deleted = black - we have lost one black node
-      if (node->getColor() == 'r' && deleted->getColor() == 'b')
+      cout << "part i" << endl;
+      // the new node becomes black to replace the black node lost.
+      node->setColor('b');
+    }
+
+  // PART II: node = black, deleted = red
+  else if (ncolor == 'b' && dcolor == 'r')
+    {
+      cout << "part ii" << endl;
+      // since deleted is the red node, the total black height of the
+      // tree doesn't change so we're good
+    }
+
+  // PART III: BOTH nodes = black; we have problems with the black height
+  else if (ncolor == 'b' && dcolor == 'b')
+    {
+      cout << "part iii" << endl;
+      deleteByCase(node, deleted, root);
+    }
+
+}
+
+/**
+ * In the case during a deletion where both the deleted node and the node 
+ * used to replace the deleted node are BLACK, we must account for six
+ * possible cases of violations.
+ */
+void deleteByCase(Node* node, Node* deleted, Node* &root)
+{
+  Node* parent = NULL;
+  Node* sibling = NULL;
+  int nChildStatus = 0; // is the deleted node a right or left child?
+
+  if (node)
+    {
+      cout << "the replaced node exists" << endl;
+      parent = node->getParent();
+      sibling = getSibling(node);
+      nChildStatus = childStatus(node);
+    }
+  else // the node was completely deleted and replaced with a null pointer
+    {
+      parent = deleted->getParent();
+      
+      // the node is null; we cannot use getSibling to get the sibling
+      // this is because parent is no longer point to the node
+      if (parent->getLeft() == NULL) // left child is NULL
 	{
-	  cout << "part i" << endl;
-	  // the new node becomes black to replace the black node lost.
-	  node->setColor('b');
+	  sibling = parent->getRight();
+	  nChildStatus = 1;
+	}
+      else if (parent->getRight() == NULL) // right child is NULL
+	{
+	  sibling = parent->getLeft();
+	  nChildStatus = 2;
+	}
+    }
+  
+  cout << "inside delete by case" << endl;
+  // CASE 1: the newly replaced node = the new root
+  if (node == root)
+    {
+      cout << "case 1" << endl;
+      // nothing happens since the black height of the tree is balanced
+      return;
+    }
+  else // the new node is NOT the root
+    {
+      cout << "NOT case 1" << endl;
+      // these color shorthands will be used when we're checking cases
+      char sColor = 'b'; // sibling color
+      char pColor = parent->getColor(); // parent color;
+      char rcColor = 'b'; // sibling's right child's color
+      char lcColor = 'b'; // sibling's left child's color
+      if (sibling)
+	{
+	  sColor = sibling->getColor();
+	}
+      if (sibling->getRight())
+	{
+	  rcColor = sibling->getRight()->getColor();
+	}
+      if (sibling->getLeft())
+	{
+	  lcColor = sibling->getLeft()->getColor();
 	}
 
-      // PART II: node = black, deleted = red
-      else if (node->getColor() == 'b' && deleted->getColor() == 'r')
+      // CASE 2: node's sibling, s, is red, everything else is black
+      if (sColor == 'r' &&
+	  pColor == 'b' &&
+	  rcColor == 'b' &&
+	  lcColor == 'b' &&
+	  sibling)
 	{
-	  cout << "part ii" << endl;
-	  // since deleted is the red node, the total black height of the
-	  // tree doesn't change so we're good
+	  cout << "case 2" << endl;
+	  // rotate the sibling through the parent
+	  if (childStatus(sibling) == 2) // right child
+	    {
+	      leftRotation(parent, root);
+	    }
+	  else if (childStatus(sibling) == 1) // left child
+	    {
+	      rightRotation(parent, root);
+	    }
+	    swapColor(parent, sibling);
+	    // fix any new violations through a recursive call
+	    deleteByCase(node, deleted, root);
 	}
-      
-      // PART III: BOTH nodes = black; we have problems with the black height
-      else if (node->getColor() == 'b' && deleted->getColor() == 'b')
+
+      // CASE 3: sibling = black, p, s, n, are all black
+      else if (sColor == 'b' &&
+	       pColor == 'b' &&
+	       rcColor == 'b' &&
+	       lcColor == 'b')
 	{
-	  cout << "parent iii" << endl;
-	  // CASE 1: the "replaced node" node = the new root
-	  if (node == root)
+	  cout << "case 3" << endl;
+	  if (sibling)
 	    {
-	      // nothing happens since the black height of the tree is balanced
+	      // remove 1 black node on the other side of the tree
+	      sibling->setColor('r'); // color sibling red
 	    }
-	  else // the new node is NOT the root
-	    {
-	      // these color shorthands will be used when we're checking cases
-	      Node* sibling = getSibling(node);
-	      char sColor = 'b'; // sibling color
-	      char pColor = parent->getColor(); // parent color;
-	      char rcColor = 'b'; // sibling's right child's color
-	      char lcColor = 'b'; // sibling's left child's color
-	      if (sibling)
-		{
-		  sColor = sibling->getColor();
-		}
-	      if (sibling->getRight())
-		{
-		  rcColor = sibling->getRight()->getColor();
-		}
-	      if (sibling->getLeft())
-		{
-		  lcColor = sibling->getLeft()->getColor();
-		}
-	      
-	      // CASE 2: node's sibling, s, is red, everything else is black
-	      if (sColor == 'r' &&
-		  pColor == 'b' &&
-		  rcColor == 'b' &&
-		  lcColor == 'b' &&
-		  sibling)
-		{
-		  cout << "case 2" << endl;
-		  // rotate the sibling through the parent
-		  if (childStatus(sibling) == 2) // right child
-		    {
-		      leftRotation(parent, root);
-		    }
-		  else if (childStatus(sibling) == 1) // left child
-		    {
-		      rightRotation(parent, root);
-		    }
-		    swapColor(parent, sibling);
-		    // fix any new violations through a recursive call
-		    fixRemove(root, node, deleted);
-		}
-	      
-	      // CASE 3: sibling = black, p, s, n, are all black
-	      else if (sColor == 'b' &&
-		       pColor == 'b' &&
-		       rcColor == 'b' &&
-		       lcColor == 'b')
-		{
-		  cout << "case 3" << endl;
-		  if (sibling)
-		    {
-		      // remove 1 black node on the other side of the tree
-		      sibling->setColor('r'); // color sibling red
-		    }
-		  
-		  fixRemove(root, node, deleted); // fix violations		  
-		}
-	      
-	      // CASE 4: parent = red, sibling + sibling's children are black
-	      else if (sColor == 'b' &&
-		       pColor == 'r' && // parent = red
-		       rcColor == 'b' &&
-		       lcColor == 'b' &&
-		       sibling)
-                {
-		  cout << "case 4" << endl;
-		  swapColor(parent, sibling);
-                }
-	      
-	      // CASE 5: parent = either color, inner niece = red, else = black
-	      else if (childStatus(node) == 2 && // node is a right child
-		       sColor == 'b' &&
-		       rcColor == 'r' && // inner niece = red
-		       lcColor == 'b' &&
-		       sibling)
-		{
-		  cout << "case 5 right node" << endl;
-		  // rotate through the sibling (rotate OUTWARD)
-		  swapColor(sibling, sibling->getRight());
-		  leftRotation(sibling, root);
-		}
-	      else if (childStatus(node) == 1 && // node is a left child
-                       sColor == 'b' &&
-		       rcColor == 'b' &&
-		       lcColor == 'r' && // inner niece = red
-		       sibling)
-                {
-		  cout << "case 5 left node" << endl;
-		  swapColor(sibling, sibling->getLeft());
-		  rightRotation(sibling, root);
-                }
-	      
-	      // CASE 6: parent = either color, outer niece = red, else = black
-	      else if (childStatus(node) == 2 && // right child
-		       sColor == 'b' &&
-		       rcColor == 'b' &&
-		       lcColor == 'r' && // outer niece = red
-		       sibling)
-		{
-		  cout << "case 6 right node" << endl;
-		  // rotate AWAY from the sibling's child
-		  rightRotation(parent, root);
-		  swapColor(sibling, parent);
-		}
-	      else if (childStatus(node) == 1 && // left child
-                       sColor == 'b' &&
-                       rcColor == 'r' &&
-                       lcColor == 'b' && // outer niece = red                 
-                       sibling)
-		{
-		  cout << "case 6 left node" << endl;
-		  leftRotation(parent, root);
-		  swapColor(sibling, parent);
-                }
-	    }
+	  deleteByCase(parent,deleted, root); // fix violations
+	}
+
+      // CASE 4: parent = red, sibling + sibling's children are black
+      else if (sColor == 'b' &&
+	       pColor == 'r' && // parent = red
+	       rcColor == 'b' &&
+	       lcColor == 'b' &&
+	       sibling)
+	{
+	  cout << "case 4" << endl;
+	  swapColor(parent, sibling);
+	}
+
+      // CASE 5: parent = either color, inner niece = red, else = black
+      else if (nChildStatus == 2 && // node is a right child
+	       sColor == 'b' &&
+	       rcColor == 'r' && // inner niece = red
+	       lcColor == 'b' &&
+	       sibling)
+	{
+	  cout << "case 5 right node" << endl;
+	  // rotate through the sibling (rotate OUTWARD)
+	  swapColor(sibling, sibling->getRight());
+	  leftRotation(sibling, root);
+	}
+      else if (nChildStatus == 1 && // node is a left child
+	       sColor == 'b' &&
+	       rcColor == 'b' &&
+	       lcColor == 'r' && // inner niece = red
+	       sibling)
+	{
+	  cout << "case 5 left node" << endl;
+	  swapColor(sibling, sibling->getLeft());
+	  rightRotation(sibling, root);
+	}
+
+      // CASE 6: parent = either color, outer niece = red, else = black
+      else if (nChildStatus == 2 && // right child
+	       sColor == 'b' &&
+	       rcColor == 'b' &&
+	       lcColor == 'r' && // outer niece = red
+	       sibling)
+	{
+	  cout << "case 6 right node" << endl;
+	  // rotate AWAY from the sibling's child
+	  rightRotation(parent, root);
+	  swapColor(sibling, parent);
+	}
+      else if (nChildStatus == 1 && // left child
+	       sColor == 'b' &&
+	       rcColor == 'r' &&
+	       lcColor == 'b' && // outer niece = red                 
+	       sibling)
+	{
+	  cout << "case 6 left node" << endl;
+	  leftRotation(parent, root);
+	  swapColor(sibling, parent);
 	}
     }
 }
