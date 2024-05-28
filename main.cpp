@@ -561,7 +561,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	    {
 	      child = current->getRight();
 	    }
-
+	  replaced = child;
 	  // if the node to be removed is the root
 	  if (current == root)
 	    {
@@ -590,7 +590,6 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
       // the node has two children
       else if (current->getLeft() != NULL && current->getRight() != NULL)
 	{
-	  
 	  // we need to find the next largest node AND the next largest node's
 	  // parent
 	  // go to the right child, then go left as far as possible
@@ -602,6 +601,8 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	      nextLargest = nextLargest->getLeft();
 	    }
 
+	  replaced = nextLargest;
+	  
 	  // we must save the child's subtree
 	  // this is the child of the next largest node
 	  Node* nextChild = nextLargest->getRight();
@@ -645,7 +646,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
                 {
 		  parent->setRight(nextLargest);
                 }
-
+	      nextLargest->setParent(parent);
 	      // the next largest has replaced the current node's position
 	      // we much attach the nextLargest to current node's subtree
 	      if (current->getLeft() != nextLargest)
@@ -670,6 +671,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	}
 
       // fix violations
+      print(root, 0);
       fixRemove(root, replaced, temp);
       delete temp;
     }
@@ -750,10 +752,12 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
       cout << "the replaced node exists" << endl;
       parent = node->getParent();
       sibling = getSibling(node);
+      cout << "sibling: " << sibling->getValue() << endl;
       nChildStatus = childStatus(node);
     }
   else // the node was completely deleted and replaced with a null pointer
     {
+      cout << "the node replacing has a null spot now" << endl;
       parent = deleted->getParent();
       
       // the node is null; we cannot use getSibling to get the sibling
@@ -768,6 +772,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  sibling = parent->getLeft();
 	  nChildStatus = 2;
 	}
+      //cout << sibling->getValue() << endl;
     }
   
   cout << "inside delete by case" << endl;
