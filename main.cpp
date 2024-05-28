@@ -503,9 +503,11 @@ void swapColor(Node* a, Node* b)
 
 void remove(Node* &root, Node* current, Node* parent, int searchkey)
 {
-  Node* replaced = NULL; // this node replaces current's spot in the tree
+  // during a deletion, "replacer" replaces "deleted"
+  Node* deleted = NULL;
+  Node* replacer = NULL; // this node replaces current's spot in the tree
   Node* temp = NULL; // this stores current before it gets deleted
-
+  
   // this is the parent of the node that got replaced
   Node* replacedParent = NULL;
   
@@ -541,7 +543,8 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	  {
 	    parent->setRight(NULL);
 	  }
-	temp = current;
+	deleted = current;
+      	temp = current;
 	
       }
 
@@ -561,7 +564,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	    {
 	      child = current->getRight();
 	    }
-	  replaced = child;
+
 	  // if the node to be removed is the root
 	  if (current == root)
 	    {
@@ -580,11 +583,13 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 		{
 		  parent->setRight(child);
 		}
-
+	      
+	      replacer = child;
+	      deleted = current;
 	      temp = current;
 	    }
 
-	  cout << "the node replaced: " << replaced->getValue() << endl;
+	  cout << "the node replaced: " << replacer->getValue() << endl;
 	}
 
       // the node has two children
@@ -600,13 +605,18 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	      nextLargestParent = nextLargest;
 	      nextLargest = nextLargest->getLeft();
 	    }
-
-	  replaced = nextLargest;
 	  
 	  // we must save the child's subtree
 	  // this is the child of the next largest node
 	  Node* nextChild = nextLargest->getRight();
 
+	  // swap the value of the next largest and the node to be deleted
+	  int currentValue = current->getValue();
+	  current->setValue(nextLargest->getValue());
+	  nextLargest->setValue(currentValue); // we will remove this node
+	  // call recursively bc nextLargest will only have 0 or 1 children
+	  remove(root, nextLargest, nextLargestParent, searchkey);
+	  /*
 	  // next, we must disconnect the next largest from its subtree
 	  // this is because we are moving the next largest to replace
 	  // the current node and we don't want it to have baggage
@@ -632,9 +642,9 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
               if (nextLargestParent != current)
                 {
                   nextLargestParent->setLeft(nextChild);
+		  nextChild->setParent(nextLargestParent());
                 }
 
-	      //delete temp;
 	    }
 	  else // the node to be removed isn't the root
             {
@@ -665,14 +675,15 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 		  nextLargestParent->setLeft(nextChild);
 		}
 
-	      //cout << nextLargest->getValue() << endl;
+	      replacer = nextChild;
+	      deleted = nextLargest;
               temp = current;
-            }
+	      }*/
 	}
 
       // fix violations
       print(root, 0);
-      fixRemove(root, replaced, temp);
+      fixRemove(root, replacer, deleted);
       delete temp;
     }
   else if (searchkey < current->getValue())
@@ -854,16 +865,18 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	}
 
       // CASE 5: parent = either color, inner niece = red, else = black
-      else if (nChildStatus == 2 && // node is a right child
+      if (nChildStatus == 2 && // node is a right child
 	       sColor == 'b' &&
 	       rcColor == 'r' && // inner niece = red
 	       lcColor == 'b' &&
 	       sibling)
 	{
 	  cout << "case 5 right node" << endl;
+	  print(root, 0);
 	  // rotate through the sibling (rotate OUTWARD)
 	  swapColor(sibling, sibling->getRight());
 	  leftRotation(sibling, root);
+	  print(root, 0);
 	  deleteByCase(node, deleted, root);
 	}
       else if (nChildStatus == 1 && // node is a left child
