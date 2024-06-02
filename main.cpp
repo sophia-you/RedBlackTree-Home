@@ -432,6 +432,10 @@ void rightRotation(Node* current, Node* &root)
 
       // the old right subtree becomes current's left subtree
       current->setLeft(rightSubtree);
+      if (rightSubtree) // make sure right subtree isn't null                              
+            {
+              rightSubtree->setParent(current);
+            }
     }
 }
 
@@ -477,6 +481,10 @@ void leftRotation(Node* current, Node* &root)
 	  
 	  // the old right subtree becomes current's left subtree
 	  current->setRight(leftSubtree);
+	  if (leftSubtree) // make sure left subtree isn't null
+	    {
+	      leftSubtree->setParent(current);
+	    }
     }
 }
 
@@ -531,6 +539,8 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
       if (current->getLeft() == NULL &&
 	  current->getRight() == NULL)
       {
+	cout << "node has no children" << endl;
+	fixRemove(root, replacer, current);
 	if (current == root) // only the root is in the tree
 	  {
 	    root = NULL; // the tree is now empty
@@ -551,6 +561,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
       // if the node has one child
       else if (current->getLeft() == NULL || current->getRight() == NULL)
 	{
+	  cout << "node has one child" << endl;
 	  // this is the current node's non-null child
 	  // this child will be adopted by current node's parent
 	  Node* child = NULL;
@@ -565,6 +576,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	      child = current->getRight();
 	    }
 
+	  fixRemove(root, child, current);
 	  // if the node to be removed is the root
 	  if (current == root)
 	    {
@@ -584,8 +596,8 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 		  parent->setRight(child);
 		}
 	      
-	      replacer = child;
-	      deleted = current;
+	      //replacer = child;
+	      //deleted = current;
 	      temp = current;
 	    }
 
@@ -595,6 +607,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
       // the node has two children
       else if (current->getLeft() != NULL && current->getRight() != NULL)
 	{
+	  cout << "node has two children" << endl;
 	  // we need to find the next largest node AND the next largest node's
 	  // parent
 	  // go to the right child, then go left as far as possible
@@ -614,6 +627,7 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	  int currentValue = current->getValue();
 	  current->setValue(nextLargest->getValue());
 	  nextLargest->setValue(currentValue); // we will remove this node
+
 	  // call recursively bc nextLargest will only have 0 or 1 children
 	  remove(root, nextLargest, nextLargestParent, searchkey);
 	  /*
@@ -682,8 +696,8 @@ void remove(Node* &root, Node* current, Node* parent, int searchkey)
 	}
 
       // fix violations
-      print(root, 0);
-      fixRemove(root, replacer, deleted);
+      //print(root, 0);
+      //fixRemove(root, replacer, deleted);
       delete temp;
     }
   else if (searchkey < current->getValue())
@@ -706,15 +720,15 @@ void fixRemove(Node* &root, Node* node, Node* deleted)
 {
   Node* parent = NULL;
   char ncolor = 'b';
-  char dcolor = deleted->getColor();
+  char dcolor = 'b';
+  if (deleted)
+    {
+      dcolor = deleted->getColor();
+    }
   if (node)
     {
       ncolor = node->getColor();
-    }
-  
-  if (node)
-    {
-      cout << "replaced value " << node->getValue() << endl;
+      cout << "replacer value " << node->getValue() << endl;
     }
   if (deleted)
     {
@@ -768,12 +782,13 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
     }
   else // the node was completely deleted and replaced with a null pointer
     {
-      cout << "the node replacing has a null spot now" << endl;
+      cout << "replacer is NULL" << endl;
       parent = deleted->getParent();
+      cout << "parent of the replacer node: " << parent->getValue() << endl;
       
       // the node is null; we cannot use getSibling to get the sibling
       // this is because parent is no longer point to the node
-      if (parent->getLeft() == NULL) // left child is NULL
+      /*if (parent->getLeft() == NULL) // left child is NULL
 	{
 	  sibling = parent->getRight();
 	  nChildStatus = 1;
@@ -782,8 +797,10 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	{
 	  sibling = parent->getLeft();
 	  nChildStatus = 2;
-	}
-      //cout << sibling->getValue() << endl;
+	  }*/
+      sibling = getSibling(deleted);
+      nChildStatus = childStatus(deleted);
+      cout << "sibling: " << sibling->getValue() << " status: " << nChildStatus  << endl;
     }
   
   cout << "inside delete by case" << endl;
@@ -802,6 +819,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
       char pColor = parent->getColor(); // parent color;
       char rcColor = 'b'; // sibling's right child's color
       char lcColor = 'b'; // sibling's left child's color
+
       if (sibling)
 	{
 	  sColor = sibling->getColor();
@@ -836,6 +854,7 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	    
 	    // fix any new violations through a recursive call
 	    deleteByCase(node, deleted, root);
+	    return;
 	}
 
       // CASE 3: sibling = black, p, s, n, are all black
@@ -902,7 +921,8 @@ void deleteByCase(Node* node, Node* deleted, Node* &root)
 	  // rotate AWAY from the sibling's child
 	  rightRotation(parent, root);
 	  swapColor(sibling, parent);
-	  sibling->getRight()->setColor('b');
+	  sibling->getLeft()->setColor('b');
+	  print(root, 0);
 	}
       else if (nChildStatus == 1 && // left child
 	       sColor == 'b' &&
